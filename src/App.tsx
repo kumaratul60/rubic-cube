@@ -1,20 +1,24 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { getAssetMeta } from "@utils/getAsset";
+import { useState } from "react";
+import "./App.css";
+// import reactLogo from "./assets/react.svg";
+// import viteLogo from "/vite.svg";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
+  const reactAssets = getAssetMeta("react.svg");
+  const viteAssets = getAssetMeta("vite.svg");
+  console.log({ reactAssets, viteAssets });
 
   return (
     <>
       <div>
         <h1 className="text-xs font-bold underline">Hello world!</h1>
         <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
+          <img src={viteAssets.src} className="logo" alt={viteAssets.alt} />
         </a>
         <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
+          <img src={reactAssets.src} className="logo react" alt={reactAssets.alt} />
         </a>
       </div>
       <h1>Vite + React</h1>
@@ -29,4 +33,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
