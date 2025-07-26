@@ -1,0 +1,46 @@
+{
+  "compilerOptions": {
+    // Build Info Cache (optional, useful in large apps)
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+
+    // Modern JS features
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+
+    // Class field syntax handling
+    "useDefineForClassFields": true,
+
+    // Module type (keeps imports as-is for bundlers like Vite)
+    "module": "ESNext",
+
+    // Avoid checking installed types (speeds up build)
+    "skipLibCheck": true,
+
+    // Path Aliases for cleaner imports
+    "baseUrl": "./src",
+    "paths": {
+      "@cube-types/*": ["types/*"],
+      "@components/*": ["components/*"],
+      "@utils/*": ["utils/*"],
+      "@hooks/*": ["hooks/*"],
+      "@features/*": ["features/*"]
+    },
+
+    // Optimize for bundlers like Vite
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true, // Preserves `import/export` for tree-shaking
+    "moduleDetection": "force",
+    "noEmit": true, // Don't emit .js files (handled by Vite)
+    "jsx": "react-jsx", // Enables modern JSX transform
+
+    // Type-safety & Clean Code
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["src"]
+}
