@@ -1,6 +1,6 @@
-import { gsap } from 'gsap';
-import { useState } from 'react';
-import * as THREE from 'three';
+import { gsap } from "gsap";
+import { useState } from "react";
+import * as THREE from "three";
 
 /**
  * Defines the state for a single cubelet, including its unique ID
@@ -52,42 +52,62 @@ export const useRubiksCube = (cubeRef: React.RefObject<THREE.Group>) => {
     const handleFaceRotation = (clickedMesh: THREE.Object3D, materialIndex: number) => {
         if (isRotating || !cubeRef.current) return;
 
-        let axis: 'x' | 'y' | 'z';
+        let axis: "x" | "y" | "z";
         let direction: 1 | -1;
 
-        // Determine the axis and direction of rotation based on which face was clicked.
-        // This is robust and independent of the camera's orientation.
         switch (materialIndex) {
-            case 0: axis = 'x'; direction = 1; break;  // Right face (+X)
-            case 1: axis = 'x'; direction = -1; break; // Left face (-X)
-            case 2: axis = 'y'; direction = 1; break;  // Top face (+Y)
-            case 3: axis = 'y'; direction = -1; break; // Bottom face (-Y)
-            case 4: axis = 'z'; direction = 1; break;  // Front face (+Z)
-            case 5: axis = 'z'; direction = -1; break; // Back face (-Z)
-            default: return; // Should not happen
+            case 0:
+                axis = "x";
+                direction = 1;
+                break;
+            case 1:
+                axis = "x";
+                direction = -1;
+                break;
+            case 2:
+                axis = "y";
+                direction = 1;
+                break;
+            case 3:
+                axis = "y";
+                direction = -1;
+                break;
+            case 4:
+                axis = "z";
+                direction = 1;
+                break;
+            case 5:
+                axis = "z";
+                direction = -1;
+                break;
+            default:
+                return;
         }
 
         const clickedId = clickedMesh.userData.id;
         if (!clickedId) return;
 
-        const clickedCubeletState = cubeState.find(c => c.id === clickedId);
+        const clickedCubeletState = cubeState.find((c) => c.id === clickedId);
         if (!clickedCubeletState) return;
 
-        // Select all cubelets on the same slice as the one that was clicked.
-        const faceCubelets = cubeState.filter(c =>
-            Math.round(c.position[axis]) === Math.round(clickedCubeletState.position[axis])
+        const faceCubelets = cubeState.filter(
+            (c) => Math.round(c.position[axis]) === Math.round(clickedCubeletState.position[axis])
         );
 
         setIsRotating(true);
         const pivot = new THREE.Group();
         cubeRef.current.add(pivot);
 
-        faceCubelets.forEach(c => {
-            const mesh = cubeRef.current!.children.find(child => child.userData.id === c.id);
+        faceCubelets.forEach((c) => {
+            const mesh = cubeRef.current!.children.find((child) => child.userData.id === c.id);
             if (mesh) pivot.attach(mesh);
         });
 
-        const rotationAxis = new THREE.Vector3(axis === 'x' ? 1 : 0, axis === 'y' ? 1 : 0, axis === 'z' ? 1 : 0);
+        const rotationAxis = new THREE.Vector3(
+            axis === "x" ? 1 : 0,
+            axis === "y" ? 1 : 0,
+            axis === "z" ? 1 : 0
+        );
         const targetRotation = (Math.PI / 2) * direction;
 
         gsap.to(pivot.rotation, {
@@ -95,25 +115,40 @@ export const useRubiksCube = (cubeRef: React.RefObject<THREE.Group>) => {
             y: pivot.rotation.y + rotationAxis.y * targetRotation,
             z: pivot.rotation.z + rotationAxis.z * targetRotation,
             duration: 0.5,
-            ease: 'power2.inOut',
+            ease: "power2.inOut",
             onComplete: () => {
                 pivot.updateWorldMatrix(true, true);
-                const newCubeState = [...cubeState];
-                pivot.children.slice().forEach(child => {
-                    const stateToUpdate = newCubeState.find(s => s.id === child.userData.id);
-                    if (stateToUpdate) {
-                        const worldPosition = new THREE.Vector3();
-                        child.getWorldPosition(worldPosition);
-                        stateToUpdate.position.copy(worldPosition).round();
 
-                        const worldQuaternion = new THREE.Quaternion();
-                        child.getWorldQuaternion(worldQuaternion);
-                        stateToUpdate.rotation.setFromQuaternion(worldQuaternion);
+                // --- IMMUTABLE UPDATE FIX FOR MANUAL ROTATION ---
+                const newStates = new Map<string, { position: THREE.Vector3; rotation: THREE.Euler }>();
+                pivot.children.slice().forEach((child) => {
+                    const worldPosition = new THREE.Vector3();
+                    child.getWorldPosition(worldPosition);
+                    worldPosition.round();
 
-                        cubeRef.current!.attach(child);
-                    }
+                    const worldQuaternion = new THREE.Quaternion();
+                    child.getWorldQuaternion(worldQuaternion);
+                    const worldRotation = new THREE.Euler().setFromQuaternion(worldQuaternion);
+
+                    newStates.set(child.userData.id, { position: worldPosition, rotation: worldRotation });
                 });
+
+                const newCubeState = cubeState.map((oldCubelet) => {
+                    if (newStates.has(oldCubelet.id)) {
+                        return {
+                            ...oldCubelet,
+                            position: newStates.get(oldCubelet.id)!.position,
+                            rotation: newStates.get(oldCubelet.id)!.rotation,
+                        };
+                    }
+                    return oldCubelet;
+                });
+
+                while (pivot.children.length > 0) {
+                    cubeRef.current!.attach(pivot.children[0]);
+                }
                 cubeRef.current!.remove(pivot);
+
                 setCubeState(newCubeState);
                 setIsRotating(false);
             },
@@ -124,6 +159,7 @@ export const useRubiksCube = (cubeRef: React.RefObject<THREE.Group>) => {
      * Animates all cubelets from their current state back to the original solved state.
      */
     const solveCube = () => {
+        // This function already uses an immutable pattern and is correct.
         if (isRotating || !cubeRef.current) return;
         setIsRotating(true);
 
@@ -132,17 +168,18 @@ export const useRubiksCube = (cubeRef: React.RefObject<THREE.Group>) => {
             onComplete: () => {
                 setCubeState(solvedState);
                 setIsRotating(false);
-            }
+            },
         });
 
-        cubeState.forEach(scrambledCubelet => {
-            const targetState = solvedState.find(c => c.id === scrambledCubelet.id);
-            const mesh = cubeRef.current!.children.find(child => child.userData.id === scrambledCubelet.id);
+        cubeState.forEach((scrambledCubelet) => {
+            const targetState = solvedState.find((c) => c.id === scrambledCubelet.id);
+            const mesh = cubeRef.current!.children.find(
+                (child) => child.userData.id === scrambledCubelet.id
+            );
 
             if (targetState && mesh) {
-                // Animate position and rotation simultaneously for all cubelets
-                tl.to(mesh.position, { ...targetState.position, duration: 0.8, ease: 'power3.inOut' }, 0);
-                tl.to(mesh.rotation, { ...targetState.rotation, duration: 0.8, ease: 'power3.inOut' }, 0);
+                tl.to(mesh.position, { ...targetState.position, duration: 0.8, ease: "power3.inOut" }, 0);
+                tl.to(mesh.rotation, { ...targetState.rotation, duration: 0.8, ease: "power3.inOut" }, 0);
             }
         });
     };
@@ -157,14 +194,13 @@ export const useRubiksCube = (cubeRef: React.RefObject<THREE.Group>) => {
         const moveCount = 25;
         let movesMade = 0;
 
-        // This is a recursive function that applies one move, then calls itself again
         const applyRandomMove = () => {
             if (movesMade >= moveCount) {
                 setIsRotating(false);
                 return;
             }
 
-            const axes: ('x' | 'y' | 'z')[] = ['x', 'y', 'z'];
+            const axes: ("x" | "y" | "z")[] = ["x", "y", "z"];
             const slices = [-1, 0, 1];
             const directions: (-1 | 1)[] = [-1, 1];
 
@@ -172,51 +208,67 @@ export const useRubiksCube = (cubeRef: React.RefObject<THREE.Group>) => {
             const slice = slices[Math.floor(Math.random() * slices.length)];
             const direction = directions[Math.floor(Math.random() * directions.length)];
 
-            const faceCubelets = cubeState.filter(c => Math.round(c.position[axis]) === slice);
+            const faceCubelets = cubeState.filter((c) => Math.round(c.position[axis]) === slice);
             const pivot = new THREE.Group();
             cubeRef.current!.add(pivot);
 
-            faceCubelets.forEach(c => {
-                const mesh = cubeRef.current!.children.find(child => child.userData.id === c.id);
+            faceCubelets.forEach((c) => {
+                const mesh = cubeRef.current!.children.find((child) => child.userData.id === c.id);
                 if (mesh) pivot.attach(mesh);
             });
 
-            const rotationAxis = new THREE.Vector3(axis === 'x' ? 1 : 0, axis === 'y' ? 1 : 0, axis === 'z' ? 1 : 0);
+            const rotationAxis = new THREE.Vector3(
+                axis === "x" ? 1 : 0,
+                axis === "y" ? 1 : 0,
+                axis === "z" ? 1 : 0
+            );
             const targetRotation = (Math.PI / 2) * direction;
 
             gsap.to(pivot.rotation, {
                 x: pivot.rotation.x + rotationAxis.x * targetRotation,
                 y: pivot.rotation.y + rotationAxis.y * targetRotation,
                 z: pivot.rotation.z + rotationAxis.z * targetRotation,
-                duration: 0.15, // Faster animation for shuffling
-                ease: 'power1.inOut',
+                duration: 0.15,
+                ease: "power1.inOut",
                 onComplete: () => {
                     pivot.updateWorldMatrix(true, true);
-                    const newCubeState = [...cubeState];
-                    pivot.children.slice().forEach(child => {
-                        const stateToUpdate = newCubeState.find(s => s.id === child.userData.id);
-                        if (stateToUpdate) {
-                            const worldPos = new THREE.Vector3();
-                            child.getWorldPosition(worldPos);
-                            stateToUpdate.position.copy(worldPos).round();
 
-                            const worldQuat = new THREE.Quaternion();
-                            child.getWorldQuaternion(worldQuat);
-                            stateToUpdate.rotation.setFromQuaternion(worldQuat);
-
-                            cubeRef.current!.attach(child);
-                        }
+                    // --- IMMUTABLE UPDATE FIX FOR SHUFFLE ---
+                    const newStates = new Map<string, { position: THREE.Vector3; rotation: THREE.Euler }>();
+                    pivot.children.slice().forEach((child) => {
+                        const worldPos = new THREE.Vector3();
+                        child.getWorldPosition(worldPos);
+                        worldPos.round();
+                        const worldQuat = new THREE.Quaternion();
+                        child.getWorldQuaternion(worldQuat);
+                        const worldRot = new THREE.Euler().setFromQuaternion(worldQuat);
+                        newStates.set(child.userData.id, { position: worldPos, rotation: worldRot });
                     });
-                    cubeRef.current!.remove(pivot);
-                    setCubeState(newCubeState);
 
+                    const newCubeState = cubeState.map((oldCubelet) => {
+                        if (newStates.has(oldCubelet.id)) {
+                            return {
+                                ...oldCubelet,
+                                position: newStates.get(oldCubelet.id)!.position,
+                                rotation: newStates.get(oldCubelet.id)!.rotation,
+                            };
+                        }
+                        return oldCubelet;
+                    });
+
+                    while (pivot.children.length > 0) {
+                        cubeRef.current!.attach(pivot.children[0]);
+                    }
+                    cubeRef.current!.remove(pivot);
+
+                    setCubeState(newCubeState);
                     movesMade++;
-                    applyRandomMove(); // Apply the next random move in the sequence
+                    applyRandomMove();
                 },
             });
         };
 
-        applyRandomMove(); // Start the shuffle sequence
+        applyRandomMove();
     };
 
     return { cubeState, isRotating, handleFaceRotation, solveCube, shuffleCube };

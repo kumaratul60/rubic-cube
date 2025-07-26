@@ -14,24 +14,23 @@ const Cubelet: React.FC<CubeletProps> = ({ cubeletState, onClick }) => {
   const meshRef = useRef<THREE.Mesh>(null!);
 
   const materials = useMemo(() => {
-    // This logic for creating an array of unique JSX elements is correct.
     const createMaterial = (color: string) => (
       <meshStandardMaterial color={color} metalness={0.1} roughness={0.1} />
     );
 
-    const blackColor = COLORS.ocean || "#202020";
+    const blackColor = COLORS.black || "#202020";
 
     const materialArray = [
-      createMaterial(position.x === 1 ? COLORS.green : blackColor), // Right (+X)
-      createMaterial(position.x === -1 ? COLORS.blue : blackColor), // Left (-X)
-      createMaterial(position.y === 1 ? COLORS.white : blackColor), // Top (+Y)
-      createMaterial(position.y === -1 ? COLORS.yellow : blackColor), // Bottom (-Y)
-      createMaterial(position.z === 1 ? COLORS.red : blackColor), // Front (+Z)
-      createMaterial(position.z === -1 ? COLORS.orange : blackColor), // Back (-Z)
+      createMaterial(position.x === 1 ? COLORS.green : blackColor),
+      createMaterial(position.x === -1 ? COLORS.blue : blackColor),
+      createMaterial(position.y === 1 ? COLORS.white : blackColor),
+      createMaterial(position.y === -1 ? COLORS.yellow : blackColor),
+      createMaterial(position.z === 1 ? COLORS.red : blackColor),
+      createMaterial(position.z === -1 ? COLORS.orange : blackColor),
     ];
 
     return materialArray;
-  }, [position]);
+  }, [position.x, position.y, position.z]);
 
   return (
     <mesh
