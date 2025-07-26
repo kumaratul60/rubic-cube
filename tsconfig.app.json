@@ -23,7 +23,8 @@
       "@components/*": ["components/*"],
       "@utils/*": ["utils/*"],
       "@hooks/*": ["hooks/*"],
-      "@features/*": ["features/*"]
+      "@features/*": ["features/*"],
+      "@pages/*": ["pages/*"]
     },
 
     // Optimize for bundlers like Vite

@@ -11,7 +11,8 @@ export default defineConfig({
       '@components': path.resolve(__dirname, 'src/components'),
       '@utils': path.resolve(__dirname, 'src/utils'),
       '@hooks': path.resolve(__dirname, 'src/hooks'),
-      '@features': path.resolve(__dirname, 'src/features')
+      '@features': path.resolve(__dirname, 'src/features'),
+      '@pages': path.resolve(__dirname, 'src/pages'),
     }
   }
 });
