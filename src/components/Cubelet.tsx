@@ -1,26 +1,41 @@
-import { cn } from "@lib/cn";
-import { FACE_COLORS } from "@utils/cubeFaceColors";
-import { transformCubeFace } from "@utils/transformCubeFace";
+import type { CubeletState } from "@hooks/useRubiksCube";
+import { RoundedBox } from "@react-three/drei";
+import React from "react";
+import * as THREE from "three";
+import Sticker from "./CubeSticker";
 
-const faceOrder = ["F", "B", "U", "D", "L", "R"];
+interface CubeletProps {
+  cubeletState: CubeletState;
+  onClick: (mesh: THREE.Object3D, faceNormal: THREE.Vector3) => void;
+}
 
-const Cubelet = ({ x, y, z }: { x: number; y: number; z: number }) => {
-  const size = 60; // px per cubelet
-  const transform = `translate3d(${x * size}px, ${y * size}px, ${z * size}px)`;
+const Cubelet: React.FC<CubeletProps> = ({ cubeletState, onClick }) => {
+  const { position, rotation, id } = cubeletState;
 
   return (
-    <div className="absolute w-[60px] h-[60px] [transform-style:preserve-3d]" style={{ transform }}>
-      {faceOrder.map((face) => (
-        <div
-          key={face}
-          className={cn(
-            "absolute w-full h-full border border-black opacity-90",
-            FACE_COLORS[face as keyof typeof FACE_COLORS]
-          )}
-          style={transformCubeFace(face)}
-        />
-      ))}
-    </div>
+    <mesh
+      userData={{ id }}
+      position={position}
+      rotation={rotation}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (e.face && e.object) {
+          // We need to pass the parent mesh, not the sticker plane
+          onClick(e.object.parent as THREE.Object3D, e.face.normal);
+        }
+      }}
+    >
+      <RoundedBox args={[0.95, 0.95, 0.95]} radius={0.05}>
+        <meshStandardMaterial color="#202020" metalness={0.1} roughness={0.1} />
+      </RoundedBox>
+
+      <Sticker cubeletPosition={position.toArray()} face="front" />
+      <Sticker cubeletPosition={position.toArray()} face="back" />
+      <Sticker cubeletPosition={position.toArray()} face="right" />
+      <Sticker cubeletPosition={position.toArray()} face="left" />
+      <Sticker cubeletPosition={position.toArray()} face="top" />
+      <Sticker cubeletPosition={position.toArray()} face="bottom" />
+    </mesh>
   );
 };
 
