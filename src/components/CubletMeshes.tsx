@@ -5,7 +5,7 @@ import Cubelet from "./Cubelet";
 
 interface CubletMeshesProps {
   cubeState: CubeletState[];
-  onCubeletClick: (mesh: THREE.Object3D, faceNormal: THREE.Vector3) => void;
+  onCubeletClick: (mesh: THREE.Object3D, materialIndex: number) => void;
 }
 
 const CubletMeshes = React.forwardRef<THREE.Group, CubletMeshesProps>(
