@@ -1,4 +1,4 @@
-import { CubeStage } from "@components/CubeStage";
+import CubeStage from "@components/CubeStage";
 
 export default function CubePage() {
   return (

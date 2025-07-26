@@ -24,7 +24,8 @@
       "@utils/*": ["utils/*"],
       "@hooks/*": ["hooks/*"],
       "@features/*": ["features/*"],
-      "@pages/*": ["pages/*"]
+      "@pages/*": ["pages/*"],
+      "@lib/*": ["lib/*"]
     },
 
     // Optimize for bundlers like Vite
@@ -41,7 +42,10 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+
+    // Enforce file name casing
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["src"]
 }
