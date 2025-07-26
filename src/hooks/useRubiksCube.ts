@@ -1,5 +1,5 @@
 import { gsap } from "gsap";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import * as THREE from "three";
 
 /**
@@ -49,7 +49,7 @@ export const useRubiksCube = (cubeRef: React.RefObject<THREE.Group>) => {
     /**
      * Handles the rotation of a single face of the cube when a user clicks on it.
      */
-    const handleFaceRotation = (clickedMesh: THREE.Object3D, materialIndex: number) => {
+    const handleFaceRotation = useCallback((clickedMesh: THREE.Object3D, materialIndex: number) => {
         if (isRotating || !cubeRef.current) return;
 
         let axis: "x" | "y" | "z";
@@ -153,12 +153,12 @@ export const useRubiksCube = (cubeRef: React.RefObject<THREE.Group>) => {
                 setIsRotating(false);
             },
         });
-    };
+    }, [isRotating, cubeState, cubeRef]);
 
     /**
      * Animates all cubelets from their current state back to the original solved state.
      */
-    const solveCube = () => {
+    const solveCube = useCallback(() => {
         // This function already uses an immutable pattern and is correct.
         if (isRotating || !cubeRef.current) return;
         setIsRotating(true);
@@ -182,12 +182,13 @@ export const useRubiksCube = (cubeRef: React.RefObject<THREE.Group>) => {
                 tl.to(mesh.rotation, { ...targetState.rotation, duration: 0.8, ease: "power3.inOut" }, 0);
             }
         });
-    };
+    }, [isRotating, cubeState, cubeRef]);
+
 
     /**
      * Applies a series of rapid, random moves to shuffle the cube.
      */
-    const shuffleCube = () => {
+    const shuffleCube = useCallback(() => {
         if (isRotating || !cubeRef.current) return;
         setIsRotating(true);
 
@@ -269,7 +270,7 @@ export const useRubiksCube = (cubeRef: React.RefObject<THREE.Group>) => {
         };
 
         applyRandomMove();
-    };
+    }, [isRotating, cubeState, cubeRef]);
 
     return { cubeState, isRotating, handleFaceRotation, solveCube, shuffleCube };
 };

@@ -15,7 +15,6 @@ export default function CubePage() {
         background: "radial-gradient(circle, rgba(55, 65, 81, 1) 0%, rgba(17, 24, 39, 1) 100%)",
       }}
     >
-
       <div className="absolute top-4 right-4 flex gap-3">
         <button
           onClick={solveCube}
